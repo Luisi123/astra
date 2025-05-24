@@ -1,6 +1,48 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { profileAPI } from '../services/api';
 
 function Dashboard() {
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await profileAPI.getProfile();
+        if (response?.data) {
+          setProfile(response.data);
+        }
+      } catch (err) {
+        console.error('Error fetching profile:', err);
+        setError('Failed to load profile data.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+          <strong className="font-bold">Error: </strong>
+          <span className="block sm:inline">{error}</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -13,13 +55,13 @@ function Dashboard() {
               <div className="flex items-center space-x-4">
                 <div className="w-16 h-16 bg-orange-400 rounded-full flex items-center justify-center">
                   <div className="w-12 h-12 bg-orange-300 rounded-full flex items-center justify-center">
-                    <span className="text-white font-bold text-lg">AP</span>
+                    <span className="text-white font-bold text-lg">{profile?.name?.charAt(0) || 'U'}</span>
                   </div>
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-800">Alex Payne</h2>
-                  <p className="text-gray-600">17 years old</p>
-                  <p className="text-gray-600">Central High School</p>
+                  <h2 className="text-2xl font-bold text-gray-800">{profile?.name || 'User'}</h2>
+                  <p className="text-gray-600">{profile?.age || 'N/A'} years old</p>
+                  <p className="text-gray-600">{profile?.school || 'N/A'}</p>
                 </div>
               </div>
               <button className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm">
@@ -31,16 +73,18 @@ function Dashboard() {
               <div>
                 <h3 className="font-semibold text-gray-800 mb-2">Interests & Hobbies</h3>
                 <ul className="list-disc list-inside text-gray-600 space-y-1">
-                  <li>Gaming</li>
-                  <li>AI Software Testing</li>
-                  <li>Building gaming PCs</li>
+                  {profile?.interests?.map((interest, index) => (
+                    <li key={index}>{interest}</li>
+                  )) || <li>No interests listed</li>}
                 </ul>
               </div>
 
               <div>
                 <h3 className="font-semibold text-gray-800 mb-2">Achievements</h3>
                 <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-                  <p className="text-yellow-700">🏆 Robotics Competition Winner</p>
+                  {profile?.achievements?.map((achievement, index) => (
+                    <p key={index} className="text-yellow-700">🏆 {achievement}</p>
+                  )) || <p className="text-yellow-700">No achievements listed</p>}
                 </div>
               </div>
             </div>
@@ -50,14 +94,12 @@ function Dashboard() {
           <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200">
             <h3 className="text-xl font-semibold text-gray-800 mb-4">Academic Progress</h3>
             <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Mathematics</span>
-                <span className="font-semibold text-gray-800">A</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Computer Science Physics</span>
-                <span className="font-semibold text-gray-800">B+</span>
-              </div>
+              {profile?.grades?.map((grade, index) => (
+                <div key={index} className="flex justify-between">
+                  <span className="text-gray-600">{grade.subject}</span>
+                  <span className="font-semibold text-gray-800">{grade.grade}</span>
+                </div>
+              )) || <p>No grades recorded yet.</p>}
             </div>
           </div>
 
@@ -84,35 +126,35 @@ function Dashboard() {
             <div className="grid grid-cols-3 gap-4 text-center">
               <div>
                 <p className="text-sm text-gray-600 mb-1">Age</p>
-                <p className="text-xl font-bold">17</p>
+                <p className="text-xl font-bold">{profile?.age || 'N/A'}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-600 mb-1">Achievements</p>
-                <p className="text-xl font-bold">5</p>
+                <p className="text-xl font-bold">{profile?.achievements?.length || 0}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-600 mb-1">Average Grade</p>
-                <p className="text-xl font-bold">B+</p>
+                <p className="text-xl font-bold">{profile?.grades?.length ? 'B+' : 'N/A'}</p>
               </div>
             </div>
             
             <div className="mt-6">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-gray-600">Progress</span>
-                <span className="font-semibold text-gray-800">60%</span>
+                <span className="font-semibold text-gray-800">{profile?.progress || 0}%</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div 
                   className="bg-orange-400 rounded-full h-2" 
-                  style={{ width: '60%' }}
+                  style={{ width: `${profile?.progress || 0}%` }}
                 ></div>
               </div>
             </div>
 
             <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-              <div className="text-blue-600">Gaming</div>
-              <div className="text-blue-600">AI</div>
-              <div className="text-blue-600">Software Testing</div>
+              {profile?.interests?.map((interest, index) => (
+                <div key={index} className="text-blue-600">{interest}</div>
+              )) || <div className="text-blue-600">No interests listed</div>}
             </div>
           </div>
 
@@ -120,31 +162,15 @@ function Dashboard() {
           <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200">
             <h3 className="text-xl font-semibold text-gray-800 mb-4">Interests & Hobbies</h3>
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Gaming</span>
-                <div className="flex space-x-1">
-                  <div className="w-8 h-12 bg-orange-400 rounded"></div>
-                  <div className="w-8 h-16 bg-orange-500 rounded"></div>
+              {profile?.interests?.map((interest, index) => (
+                <div key={index} className="flex items-center justify-between">
+                  <span className="text-gray-600">{interest}</span>
+                  <div className="flex space-x-1">
+                    <div className="w-8 h-12 bg-orange-400 rounded"></div>
+                    <div className="w-8 h-16 bg-orange-500 rounded"></div>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">AI Software Testing</span>
-                <div className="flex space-x-1">
-                  <div className="w-8 h-10 bg-purple-400 rounded"></div>
-                  <div className="w-8 h-14 bg-purple-500 rounded"></div>
-                  <div className="w-8 h-18 bg-purple-600 rounded"></div>
-                </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Robotics</span>
-                <div className="flex space-x-1">
-                  <div className="w-8 h-8 bg-orange-400 rounded"></div>
-                </div>
-              </div>
-            </div>
-            <div className="mt-4 text-xs text-gray-500 flex justify-between">
-              <span>Computer Science</span>
-              <span>Physics B+</span>
+              )) || <p>No interests listed</p>}
             </div>
           </div>
 
@@ -173,29 +199,15 @@ function Dashboard() {
           <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200">
             <h3 className="text-xl font-semibold text-gray-800 mb-4">University Applications</h3>
             <div className="space-y-4">
-              <div className="border-b pb-4">
-                <div className="flex justify-between items-center mb-2">
-                  <h4 className="font-semibold">State University</h4>
-                  <span className="text-sm text-red-600">Deadline: Jan. 15</span>
+              {profile?.applications?.map((app, index) => (
+                <div key={index} className="border-b pb-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <h4 className="font-semibold">{app.university}</h4>
+                    <span className="text-sm text-red-600">Deadline: {new Date(app.deadline).toLocaleDateString()}</span>
+                  </div>
+                  <p className="text-gray-600">{app.program}</p>
                 </div>
-                <p className="text-gray-600">Computer Science Program</p>
-              </div>
-
-              <div className="border-b pb-4">
-                <div className="flex justify-between items-center mb-2">
-                  <h4 className="font-semibold">Tech Institute</h4>
-                  <span className="text-sm text-red-600">Deadline: Feb. 1</span>
-                </div>
-                <p className="text-gray-600">Artificial Intelligence Track</p>
-              </div>
-
-              <div className="border-b pb-4">
-                <div className="flex justify-between items-center mb-2">
-                  <h4 className="font-semibold">City College</h4>
-                  <span className="text-sm text-red-600">Deadline: Mar. 10</span>
-                </div>
-                <p className="text-gray-600">Software Engineering Program</p>
-              </div>
+              )) || <p>No applications yet.</p>}
             </div>
           </div>
 
@@ -206,12 +218,12 @@ function Dashboard() {
               <div>
                 <div className="flex justify-between mb-2">
                   <span className="text-gray-600">Average Completion</span>
-                  <span className="font-semibold text-gray-800">60%</span>
+                  <span className="font-semibold text-gray-800">{profile?.progress || 0}%</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div 
                     className="bg-indigo-600 rounded-full h-2" 
-                    style={{ width: '60%' }}
+                    style={{ width: `${profile?.progress || 0}%` }}
                   ></div>
                 </div>
               </div>
@@ -227,4 +239,4 @@ function Dashboard() {
   );
 }
 
-export default Dashboard;
+export default Dashboard;

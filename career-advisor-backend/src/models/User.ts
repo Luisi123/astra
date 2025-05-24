@@ -4,10 +4,18 @@ import bcrypt from 'bcryptjs';
 // Define the interface for a User document
 export interface IUser extends Document {
   email: string;
-  password?: string; // Password is optional as it will be hashed
-  createdAt: Date;
-  updatedAt: Date;
-  comparePassword: (candidatePassword: string) => Promise<boolean>;
+  password: string;
+  name: string;
+  age: number;
+  school: string;
+  interests: string[];
+  achievements: string[];
+  grades: {
+    subject: string;
+    grade: string;
+  }[];
+  progress: number;
+  comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
 // Define the User schema
@@ -23,22 +31,53 @@ const UserSchema: Schema = new Schema({
   password: {
     type: String,
     required: [true, 'Password is required'],
-    minlength: [6, 'Password must be at least 6 characters long'],
-    select: false // Do not return the password by default in queries
+    select: false // Don't include password in queries by default
+  },
+  name: {
+    type: String,
+    required: [true, 'Name is required']
+  },
+  age: {
+    type: Number,
+    required: [true, 'Age is required']
+  },
+  school: {
+    type: String,
+    required: [true, 'School is required']
+  },
+  interests: [{
+    type: String
+  }],
+  achievements: [{
+    type: String
+  }],
+  grades: [{
+    subject: {
+      type: String,
+      required: [true, 'Subject is required']
+    },
+    grade: {
+      type: String,
+      required: [true, 'Grade is required']
+    }
+  }],
+  progress: {
+    type: Number,
+    default: 0
   },
 }, {
   timestamps: true // Adds createdAt and updatedAt fields automatically
 });
 
 // Pre-save hook to hash the password before saving a new user or updating password
-UserSchema.pre<IUser>('save', async function(next) {
+UserSchema.pre<IUser>('save', async function(this: IUser, next) {
   // Only hash the password if it has been modified (or is new)
   if (!this.isModified('password')) {
     return next();
   }
   try {
     const salt = await bcrypt.genSalt(10); // Generate a salt
-    this.password = await bcrypt.hash(this.password!, salt); // Hash the password
+    this.password = await bcrypt.hash(this.password, salt); // Hash the password
     next();
   } catch (error: any) {
     next(error); // Pass any error to the next middleware
@@ -46,9 +85,8 @@ UserSchema.pre<IUser>('save', async function(next) {
 });
 
 // Method to compare candidate password with the hashed password in the database
-UserSchema.methods.comparePassword = async function(candidatePassword: string): Promise<boolean> {
-  // 'this.password' needs to be explicitly selected in the query to be available here
-  return await bcrypt.compare(candidatePassword, this.password!);
+UserSchema.methods.comparePassword = async function(this: IUser, candidatePassword: string): Promise<boolean> {
+  return await bcrypt.compare(candidatePassword, this.password);
 };
 
 // Create and export the User model
