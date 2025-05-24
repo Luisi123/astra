@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import Login from './components/Login';
 import Signup from './components/Signup';
 import Dashboard from './components/Dashboard';
+import confusedImage from './assets/confused.png'; // Import the image
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('token'));
@@ -24,7 +25,7 @@ function App() {
 
   // Landing Page Component
   const LandingPage = () => (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white flex flex-col">
       {/* Navigation Bar */}
       <nav className="bg-white border-b border-gray-200 p-4">
         <div className="container mx-auto flex justify-between items-center">
@@ -57,24 +58,31 @@ function App() {
 
       {/* Hero Section */}
       <section className="py-20 bg-gradient-to-r from-indigo-50 to-blue-50">
-        <div className="container mx-auto text-center px-4">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-6">
-            CAREER ADVICE & ORIENTATION
-          </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
-            Get guidance on choosing your career path and navigating the university application process.
-          </p>
-          {!isLoggedIn ? (
-            <div className="space-x-4">
-              <Link to="/signup" className="inline-block px-8 py-3 bg-indigo-600 text-white font-medium rounded-md hover:bg-indigo-700 transition-colors">
-                GET STARTED
+        <div className="container mx-auto px-4 flex items-center justify-between">
+          {/* Text content */}
+          <div className="w-full md:w-1/2 text-center md:text-left">
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-6">
+              CAREER ADVICE & ORIENTATION
+            </h1>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto md:mx-0 mb-8">
+              Get guidance on choosing your career path and navigating the university application process.
+            </p>
+            {!isLoggedIn ? (
+              <div className="space-x-4">
+                <Link to="/signup" className="inline-block px-8 py-3 bg-indigo-600 text-white font-medium rounded-md hover:bg-indigo-700 transition-colors">
+                  GET STARTED
+                </Link>
+              </div>
+            ) : (
+              <Link to="/dashboard" className="inline-block px-8 py-3 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 transition-colors">
+                Go to Dashboard
               </Link>
-            </div>
-          ) : (
-            <Link to="/dashboard" className="inline-block px-8 py-3 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 transition-colors">
-              Go to Dashboard
-            </Link>
-          )}
+            )}
+          </div>
+          {/* Image */}
+          <div className="w-full md:w-1/2 hidden md:flex justify-center">
+            <img src={confusedImage} alt="Career Advice Illustration" className="max-w-sm" />
+          </div>
         </div>
       </section>
 
